@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heiwa Clips Cut — Viral Short Clipper</title>
+  <style>
+    :root { --bg: #0b0f19; --card: #131a2a; --accent: #00f0ff; --text: #f1f5f9; --muted: #94a3b8; }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); padding: 16px; }
+    .container { max-width: 820px; margin: auto; }
+    h1 { font-size: 1.5rem; margin-bottom: 4px; color: var(--accent); }
+    p.sub { color: var(--muted); font-size: 0.9rem; margin-top: 0; }
+    .card { background: var(--card); border: 1px solid #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    input, textarea, select, button {
+      width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #334155;
+      background: #0f172a; color: var(--text); font-size: 0.95rem; margin-bottom: 12px;
+    }
+    button { background: var(--accent); color: #000; font-weight: 700; border: none; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .moment-item { background: #0f172a; border-left: 3px solid var(--accent); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+    .moment-item h4 { margin: 0 0 4px; color: var(--accent); }
+    .badge { display: inline-block; background: #1e293b; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-right: 6px; }
+    video, canvas { width: 100%; max-height: 360px; border-radius: 10px; background: #000; display: block; margin-top: 8px; }
+    #status { font-size: 0.9rem; color: #38bdf8; margin-top: 6px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>⚡ Heiwa Clips Cut</h1>
+  <p class="sub">Fast Viral Moment Detector & 9:16 Vertical Clipper</p>
+
+  <div class="card">
+    <label>1. Gemini API Key (Local browser mein hi rehti hai)</label>
+    <input type="password" id="apiKey" placeholder="AIzaSy..." />
+
+    <label>2. Video Transcript / Captions Paste Karein (Timestamps ke saath best hai)</label>
+    <textarea id="transcript" rows="5" placeholder="00:12 Yaar aaj toh scene ho gaya...&#10;00:45 Bhaago bhai police aa gayi!&#10;01:20 Oh my god ye kya clutch tha..."></textarea>
+
+    <div class="row">
+      <div>
+        <label>Clip Length (Seconds)</label>
+        <select id="clipLen">
+          <option value="15-30">15–30 sec (Shorts/Reels)</option>
+          <option value="30-60" selected>30–60 sec (Standard)</option>
+        </select>
+      </div>
+      <div>
+        <label>Language / Vibe</label>
+        <select id="vibe">
+          <option value="Hinglish / Hindi Gaming & Reaction">Hinglish / Gaming / Reaction</option>
+          <option value="Podcast / Motivation / Story">Podcast / Storytelling</option>
+        </select>
+      </div>
+    </div>
+
+    <button id="analyzeBtn" onclick="findMoments()">🔍 Find Viral Moments with AI</button>
+    <div id="momentsList"></div>
+  </div>
+
+  <div class="card">
+    <label>3. Apni Video File Select Karein (MP4 / WebM)</label>
+    <input type="file" id="videoFile" accept="video/*" onchange="loadVideo()" />
+    <video id="srcVideo" controls playsinline></video>
+
+    <div class="row" style="margin-top:12px;">
+      <div>
+        <label>Start Time (Seconds)</label>
+        <input type="number" id="startSec" value="0" min="0" step="0.5" />
+      </div>
+      <div>
+        <label>End Time (Seconds)</label>
+        <input type="number" id="endSec" value
+          
