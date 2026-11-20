@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -126,7 +125,7 @@ const BIG=250*1024*1024,MAX=15;
 const isMobile=(window.matchMedia&&matchMedia("(pointer:coarse)").matches)||/Android|iPhone|iPad/i.test(navigator.userAgent);
 const mem=navigator.deviceMemory||4;
 const DAY=864e5,KEEP=10;
-let ff=null,loaded=null,inp="in",busy=false,batching=false,wasmBad=false,segs=[],wl=null,yt=null,ytApi=null,src="file";
+let ff=null,loaded=null,inp="in",busy=false,batching=false,wasmBad=false,segs=[],wl=null,yt=null,ytApi=null,src="file",audioLost=false;
 
 const sec=t=>typeof t==="number"?t:String(t).trim().split(":").map(Number).reduce((a,b)=>a*60+b,0);
 const fmt=t=>{t=Math.round(t);const h=Math.floor(t/3600),mi=Math.floor(t%3600/60),s=t%60;return(h?h+":":"")+String(mi).padStart(2,"0")+":"+String(s).padStart(2,"0")};
@@ -321,6 +320,7 @@ async function cutWasm(s,e,file,P){
 
 async function cutCanvas(s,e,P){
   /* canvas mode 1080p se upar nahi jaata */
+  audioLost=false;
   const k=Math.min(1,1080/P.w);
   c.width=Math.round(P.w*k/2)*2;c.height=Math.round(P.h*k/2)*2;
   v.pause();
@@ -328,8 +328,8 @@ async function cutCanvas(s,e,P){
     v.currentTime=s;
     await new Promise(r=>{v.addEventListener("seeked",r,{once:true});setTimeout(r,4000)});
   }
-  const stream=c.captureStream(P.fps),vs=v.captureStream?v.captureStream():null;
-  if(vs)vs.getAudioTracks().forEach(t=>stream.addTrack(t));
+  const stream=c.captureStream(P.fps);
+  try{const vs=v.captureStream?v.captureStream():null;if(vs)vs.getAudioTracks().forEach(t=>stream.addTrack(t))}catch(_){audioLost=true}
   const mime=["video/mp4;codecs=avc1","video/webm;codecs=vp9,opus","video/webm"].find(m=>MediaRecorder.isTypeSupported(m))||"";
   const rec=new MediaRecorder(stream,mime?{mimeType:mime}:{}),ch=[];
   rec.ondataavailable=x=>x.data.size&&ch.push(x.data);
@@ -367,7 +367,7 @@ async function runCut(tag="",seg){
   if(P.w>1080&&isMobile&&!confirm("4K phone/tablet par dheema ya fail ho sakta hai. Phir bhi chalayein?"))return null;
   lock(true);setBar(0);
   if(seg)seg.tag.textContent="⏳ Processing";
-  let ok=false;
+  let ok=false;audioLost=false;
   try{
     if(wasmBad)throw new Error("skip");
     await cutWasm(s,e,file,P);
@@ -379,9 +379,9 @@ async function runCut(tag="",seg){
     try{
       await cutCanvas(s,e,P);
       ok=true;
-    }catch(e2){$("cstatus").textContent="Error: "+e2.message}
+    }catch(e2){$("cstatus").textContent="Error: "+e2.message+(m!=="skip"&&m!=="big"?" | Fast engine fail: "+m:"")}
   }
-  if(ok){$("cstatus").textContent="Clip ready!"+tag;setBar(100)}
+  if(ok){$("cstatus").textContent="Clip ready!"+tag+(audioLost?" (real-time mode mein awaaz nahi aa saki)":"");setBar(100)}
   if(seg)seg.tag.textContent=ok?"✅ Done":"❌ Error";
   lock(false);
   return ok;
@@ -389,41 +389,5 @@ async function runCut(tag="",seg){
 $("cut").onclick=()=>runCut();
 $("dlall").onclick=()=>{
   const a=Array.from(document.querySelectorAll("#out .res a")).reverse();
-  if(!a.length){$("cstatus").textContent="Abhi koi clip bani nahi hai.";return}
-  a.forEach((x,i)=>setTimeout(()=>x.click(),i*800));
-  $("cstatus").textContent=a.length+" clips download ho rahi hain. Browser poochhe to 'Allow multiple downloads' dabayein.";
-};
-
-/* ---- YouTube player (sirf dekhne aur mark karne ke liye) ---- */
-function ytReady(){
-  if(window.YT&&YT.Player)return Promise.resolve();
-  if(!ytApi)ytApi=new Promise((res,rej)=>{
-    window.onYouTubeIframeAPIReady=res;
-    const t=document.createElement("script");
-    t.src="https://www.youtube.com/iframe_api";
-    t.onerror=()=>rej(new Error("YouTube player load nahi hua. Internet check karein."));
-    document.head.appendChild(t);
-  });
-  return ytApi;
-}
-$("ytbtn").onclick=async()=>{
-  const m=$("yt").value.match(/(?:v=|youtu\.be\/|embed\/|live\/|shorts\/)([\w-]{11})/);
-  if(!m){$("ystatus").textContent="Sahi YouTube link daalein.";return}
-  $("ystatus").textContent="Player load ho raha hai...";
-  try{
-    await ytReady();
-    $("ytbox").innerHTML='<div id="ytp"></div>';
-    yt=new YT.Player("ytp",{videoId:m[1],width:"100%",height:"240",playerVars:{playsinline:1}});
-    src="yt";
-    $("ystatus").textContent="Player taiyaar. Dekhte hue Mark Start / Mark End dabayein (Manual cut wale card mein).";
-  }catch(err){ytApi=null;$("ystatus").textContent="Error: "+err.message}
-};
-
-$("clr").onclick=async()=>{await hist("clear");$("out").innerHTML="";$("cstatus").textContent="History saaf ho gayi."};
-window.addEventListener("beforeunload",ev=>{if(busy){ev.preventDefault();ev.returnValue=""}});
-try{JSON.parse(localStorage.getItem("hs")||"[]").slice(0,MAX).forEach(x=>addMoment({start:x.s,end:x.e,title:x.t}))}catch(_){}
-(async()=>{await prune();const all=(await hist("all"))||[];all.sort((a,b)=>a.id-b.id).forEach(x=>showResult(x.blob,x.ext,x))})();
-})();
-</script>
-</body>
-</html>
+  if
+  
