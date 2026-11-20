@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heiwa Clips Cut</title>
+<meta name="description" content="Free 9:16 vertical video clipper. Aapki video aapke device par hi rehti hai.">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b0f19;color:#e6e9f2;font-family:system-ui,Arial,sans-serif;padding:20px;max-width:760px;margin:auto}
+h1{color:#00e5ff;margin:10px 0 2px}
+.sub{color:#9aa3b8;margin:0 0 18px}
+.card{background:#131a2a;border:1px solid #232c44;border-radius:14px;padding:18px;margin-bottom:18px}
+label{display:block;margin:12px 0 6px;color:#b9c2d8;font-size:14px}
+input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #2c3652;background:#0b1020;color:#fff;font-size:15px}
+textarea{min-height:110px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{width:100%;margin-top:14px;padding:14px;border:0;border-radius:9px;background:#00e5ff;color:#001018;font-weight:700;font-size:16px;cursor:pointer}
+button.sec{background:#26304a;color:#fff}
+button:disabled{opacity:.5}
+video{width:100%;border-radius:10px;background:#000;margin-top:12px;max-height:420px}
+.st{margin-top:10px;color:#7fe9ff;font-size:14px;min-height:20px}
+.m{background:#1a2338;border-radius:10px;padding:12px;margin-top:10px}
+.m b{color:#fff}.m small{color:#9aa3b8;display:block;margin:4px 0}
+.m .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.m button{margin-top:6px;padding:9px;font-size:14px}
+#out a{display:block;margin:6px 0 14px;color:#00e5ff}
+#out video{max-width:260px;display:block}
+details{margin-top:10px}summary{cursor:pointer;color:#9aa3b8}
+canvas{display:none}
+</style>
+</head>
+<body>
+<h1>⚡ Heiwa Clips Cut</h1>
+<p class="sub">Free 9:16 vertical clipper. Video aapke device par hi rehti hai, kahin upload nahi hoti.</p>
+
+<div class="card">
+  <label>1. Apni video file select karein (MP4 / WebM)</label>
+  <input id="file" type="file" accept="video/*">
+  <video id="v" controls playsinline></video>
+  <label>Clip length</label>
+  <select id="len"><option value="30">30 sec</option><option value="45">45 sec</option><option value="60">60 sec</option><option value="90">90 sec</option><option value="20">20 sec</option></select>
+  <button id="auto">✂️ Auto-split (bina AI, bina key)</button>
+  <button id="all" class="sec" disabled>⬇ Cut all clips</button>
+  <div id="moments"></div>
+</div>
+
+<div class="card">
+  <b>Manual cut</b>
+  <div class="row">
+    <div><label>Start (seconds)</label><input id="s" type="number" min="0" step="0.1" value="0"></div>
+    <div><label>End (seconds)</label><input id="e" type="number" min="0" step="0.1" value="30"></div>
+  </div>
+  <button id="cut">✂️ Cut 9:16 Clip</button>
+  <div class="st" id="cstatus"></div>
+  <div id="out"></div>
+</div>
+
+<div class="card">
+  <details>
+    <summary>🔍 Optional: AI se viral moments dhundhein (free Gemini key chahiye)</summary>
+    <label>Gemini API Key (sirf aapke browser mein rehti hai)</label>
+    <input id="key" type="password" placeholder="AIzaSy...">
+    <label>Transcript / captions paste karein (timestamps ke saath)</label>
+    <textarea id="tr" placeholder="00:12 Yaar aaj toh scene ho gaya...&#10;00:45 Bhaago bhai police aa gayi!"></textarea>
+    <label>Vibe</label>
+    <select id="vibe"><option>Podcast / Storytelling</option><option>Comedy / Funny</option><option>Gaming / Action</option><option>Motivation / Education</option></select>
+    <button id="find">Find Viral Moments with AI</button>
+    <div class="st" id="status"></div>
+  </details>
+</div>
+<canvas id="c" width="720" height="1280"></canvas>
+
+<script>
+const $=id=>document.getElementById(id);
+const v=$("v"),c=$("c"),ctx=c.getContext("2d");
+let segs=[];
+try{$("key").value=localStorage.getItem("gk")||""}catch(_){}
+
+$("file").onchange=e=>{const f=e.target.files[0];if(f){v.src=URL.createObjectURL(f);$("moments").innerHTML="";segs=[];$("all").disabled=true}};
+
+const sec=t=>typeof t==="number"?t:String(t).trim().split(":").map(Number).reduce((a,b)=>a*60+b,0);
+
+function addMoment(m){
+  const s=sec(m.start),e=sec(m.end);
+  segs.push({s,e});
+  const d=document.createElement("div");d.className="m";
+  d.innerHTML='<b></b><small></small><small>'+s.toFixed(0)+'s → '+e.toFixed(0)+'s</small><div class="btns"><button class="sec">▶ Preview</button><button>✂️ Cut</button></div>';
+  d.querySelector("b").textContent=m.title||"Clip";
+  d.querySelectorAll("small")[0].textContent=m.reason||"";
+  const [b1,b2]=d.querySelectorAll("button");
+  b1.onclick=()=>{$("s").value=s;$("e").value=e;v.currentTime=s;v.play()};
+  b2.onclick=()=>{$("s").value=s;$("e").value=e;cutClip()};
+  $("moments").appendChild(d);
+  $("all").disabled=false;
+}
+
+$("auto").onclick=()=>{
+  if(!v.src||!isFinite(v.duration)){$("cstatus").textContent="Pehle video select karein.";return}
+  $("moments").innerHTML="";segs=[];
+  const L=+$("len").value;let n=1;
+  for(let t=0;t<v.duration;t+=L,n++){
+    const end=Math.min(t+L,v.duration);
+    if(end-t<5)break;
+    addMoment({start:t,end,title:"Clip "+n,reason:""});
+  }
+};
+
+$("all").onclick=async()=>{
+  $("all").disabled=true;
+  for(const g of segs){$("s").value=g.s;$("e").value=g.e;await cutClip()}
+  $("all").disabled=false;
+};
+
+$("find").onclick=async()=>{
+  const key=$("key").value.trim(),tr=$("tr").value.trim();
+  if(!key||!tr){$("status").textContent="API key aur transcript dono daalein.";return}
+  try{localStorage.setItem("gk",key)}catch(_){}
+  $("status").textContent="AI moments dhoondh raha hai...";$("find").disabled=true;
+  const prompt='You are a viral short-video editor. From this transcript (with timestamps), pick the 5 best moments for Shorts/Reels. Vibe: '+$("vibe").value+'. Each clip must be about '+$("len").value+' seconds long. Return ONLY a JSON array: [{"start":seconds,"end":seconds,"title":"short catchy title","reason":"why it can go viral"}]. Use numbers in seconds.\nTranscript:\n'+tr;
+  try{
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json"}})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error?.message||"API error");
+    const list=JSON.parse(d.candidates[0].content.parts.map(p=>p.text||"").join("").replace(/```json|```/g,"").trim());
+    $("moments").innerHTML="";segs=[];
+    list.forEach(addMoment);
+    $("status").textContent=list.length+" moments mile (upar list mein).";
+  }catch(err){$("status").textContent="Error: "+err.message}
+  $("find").disabled=false;
+};
+
+$("cut").onclick=cutClip;
+
+async function cutClip(){
+  if(!v.src){$("cstatus").textContent="Pehle video select karein.";return}
+  const s=parseFloat($("s").value),e=parseFloat($("e").value);
+  if(!(e>s)){$("cstatus").textContent="End time start se bada hona chahiye.";return}
+  $("cut").disabled=true;
+  $("cstatus").textContent="Clip ban rahi hai (real-time record hoti hai, tab change na karein)...";
+  try{
+    v.pause();v.currentTime=s;
+    await new Promise(r=>v.addEventListener("seeked",r,{once:true}));
+    const stream=c.captureStream(30);
+    const vs=v.captureStream?v.captureStream():null;
+    if(vs)vs.getAudioTracks().forEach(t=>stream.addTrack(t));
+    const mime=["video/mp4;codecs=avc1","video/webm;codecs=vp9,opus","video/webm"].find(m=>MediaRecorder.isTypeSupported(m))||"";
+    const rec=new MediaRecorder(stream,mime?{mimeType:mime}:{});
+    const chunks=[];rec.ondataavailable=ev=>ev.data.size&&chunks.push(ev.data);
+    const done=new Promise(r=>rec.onstop=r);
+    rec.start();await v.play();
+    const draw=()=>{
+      const vw=v.videoWidth,vh=v.videoHeight,tw=vh*9/16;
+      ctx.fillStyle="#000";ctx.fillRect(0,0,c.width,c.height);
+      if(tw<=vw)ctx.drawImage(v,(vw-tw)/2,0,tw,vh,0,0,c.width,c.height);
+      else{const th=vw*16/9;ctx.drawImage(v,0,(vh-th)/2,vw,th,0,0,c.width,c.height)}
+      if(v.currentTime>=e||v.ended){rec.stop();v.pause();return}
+      $("cstatus").textContent="Recording... "+Math.round((v.currentTime-s)/(e-s)*100)+"%";
+      requestAnimationFrame(draw);
+    };
+    draw();await done;
+    const type=rec.mimeType||"video/webm";
+    const url=URL.createObjectURL(new Blob(chunks,{type}));
+    const ext=type.includes("mp4")?"mp4":"webm";
+    const box=document.createElement("div");
+    box.innerHTML='<video controls playsinline src="'+url+'"></video><a href="'+url+'" download="clip_'+Date.now()+'.'+ext+'">⬇ Download clip (.'+ext+')</a>';
+    $("out").prepend(box);
+    $("cstatus").textContent="Clip ready!";
+  }catch(err){$("cstatus").textContent="Error: "+err.message}
+  $("cut").disabled=false;
+}
+</script>
+</body>
+</html>
+          
