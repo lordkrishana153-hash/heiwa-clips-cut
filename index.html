@@ -1,47 +1,59 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Heiwa Clips Cut</title>
-<meta name="description" content="Free 9:16 vertical video clipper. Aapki video aapke device par hi rehti hai.">
+<title>Heiwa Clips Cut - Free 9:16 Video Clipper</title>
+<meta name="description" content="Free 9:16 vertical video clipper. Video aapke device par hi katti hai, kahin upload nahi hoti.">
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js" crossorigin></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#0b0f19;color:#e6e9f2;font-family:system-ui,Arial,sans-serif;padding:20px;max-width:760px;margin:auto}
-h1{color:#00e5ff;margin:10px 0 2px}
-.sub{color:#9aa3b8;margin:0 0 18px}
-.card{background:#131a2a;border:1px solid #232c44;border-radius:14px;padding:18px;margin-bottom:18px}
+body{margin:auto;background:#0b0f19;color:#e6e9f2;font-family:system-ui,Arial,sans-serif;padding:18px;max-width:780px}
+h1{color:#00e5ff;margin:8px 0 2px}
+.sub{color:#9aa3b8;margin:0 0 16px}
+.card{background:#131a2a;border:1px solid #232c44;border-radius:14px;padding:18px;margin-bottom:16px}
 label{display:block;margin:12px 0 6px;color:#b9c2d8;font-size:14px}
 input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #2c3652;background:#0b1020;color:#fff;font-size:15px}
-textarea{min-height:110px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-button{width:100%;margin-top:14px;padding:14px;border:0;border-radius:9px;background:#00e5ff;color:#001018;font-weight:700;font-size:16px;cursor:pointer}
+button{width:100%;margin-top:12px;padding:14px;border:0;border-radius:9px;background:#00e5ff;color:#001018;font-weight:700;font-size:16px;cursor:pointer}
 button.sec{background:#26304a;color:#fff}
-button:disabled{opacity:.5}
-video{width:100%;border-radius:10px;background:#000;margin-top:12px;max-height:420px}
+button:disabled{opacity:.45;cursor:not-allowed}
+video{width:100%;border-radius:10px;background:#000;margin-top:12px;max-height:430px}
 .st{margin-top:10px;color:#7fe9ff;font-size:14px;min-height:20px}
+.bar{height:8px;background:#26304a;border-radius:6px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:#00e5ff;transition:width .2s}
 .m{background:#1a2338;border-radius:10px;padding:12px;margin-top:10px}
-.m b{color:#fff}.m small{color:#9aa3b8;display:block;margin:4px 0}
-.m .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.m button{margin-top:6px;padding:9px;font-size:14px}
-#out a{display:block;margin:6px 0 14px;color:#00e5ff}
-#out video{max-width:260px;display:block}
-details{margin-top:10px}summary{cursor:pointer;color:#9aa3b8}
+.m small{color:#9aa3b8;display:block;margin:4px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.two button{margin-top:6px;padding:10px;font-size:14px}
+.res{display:flex;gap:12px;align-items:flex-start;background:#1a2338;border-radius:10px;padding:10px;margin-top:12px}
+.res video{width:130px;margin:0;border-radius:8px}
+.res div{flex:1}
+.res a,.res button{display:block;margin-top:8px;padding:10px;font-size:14px;text-align:center;border-radius:8px;text-decoration:none}
+.res a{background:#00e5ff;color:#001018;font-weight:700}
+details summary{cursor:pointer;color:#9aa3b8}
+.note{font-size:13px;color:#8892aa;margin-top:8px}
+.soon{display:inline-block;background:#3a2f12;color:#ffd166;font-size:12px;padding:3px 8px;border-radius:20px;margin-left:6px}
 canvas{display:none}
 </style>
 </head>
 <body>
 <h1>⚡ Heiwa Clips Cut</h1>
-<p class="sub">Free 9:16 vertical clipper. Video aapke device par hi rehti hai, kahin upload nahi hoti.</p>
+<p class="sub">Free 9:16 vertical clipper. Phone aur PC dono par chalta hai. Video aapke device par hi katti hai, kahin upload nahi hoti.</p>
 
 <div class="card">
-  <label>1. Apni video file select karein (MP4 / WebM)</label>
+  <label>1. Video file chuno (MP4 / MOV / WebM)</label>
   <input id="file" type="file" accept="video/*">
   <video id="v" controls playsinline></video>
-  <label>Clip length</label>
-  <select id="len"><option value="30">30 sec</option><option value="45">45 sec</option><option value="60">60 sec</option><option value="90">90 sec</option><option value="20">20 sec</option></select>
-  <button id="auto">✂️ Auto-split (bina AI, bina key)</button>
-  <button id="all" class="sec" disabled>⬇ Cut all clips</button>
+  <div class="row">
+    <div><label>Clip length</label>
+      <select id="len"><option value="15">15 sec</option><option value="20">20 sec</option><option value="30" selected>30 sec</option><option value="45">45 sec</option><option value="60">1 min</option><option value="90">1.5 min</option></select></div>
+    <div><label>Style</label>
+      <select id="mode"><option value="crop">Crop (poori screen bhare)</option><option value="fit">Fit + blur background</option></select></div>
+  </div>
+  <button id="auto" class="lockable">✂️ Auto-split (poori video barabar clips mein)</button>
+  <button id="all" class="sec" disabled>⬇ Saari clips banao</button>
   <div id="moments"></div>
 </div>
 
@@ -51,125 +63,210 @@ canvas{display:none}
     <div><label>Start (seconds)</label><input id="s" type="number" min="0" step="0.1" value="0"></div>
     <div><label>End (seconds)</label><input id="e" type="number" min="0" step="0.1" value="30"></div>
   </div>
-  <button id="cut">✂️ Cut 9:16 Clip</button>
+  <button id="cut" class="lockable">✂️ Cut 9:16 Clip</button>
+  <div class="bar"><i id="bar"></i></div>
   <div class="st" id="cstatus"></div>
   <div id="out"></div>
+  <div class="note">Badi file (250 MB se upar) real-time mode mein katti hai: clip jitni lambi, utna time lagta hai. Beech mein tab na badlein. HEVC/H.265 wali phone videos na chalein to video ko WhatsApp se khud ko bhejkar phir chuno.</div>
+</div>
+
+<div class="card">
+  <b>🔗 YouTube link se clip</b><span class="soon">Jaldi aa raha hai</span>
+  <label>YouTube URL</label>
+  <input id="yt" type="url" placeholder="https://youtube.com/watch?v=...">
+  <button id="ytbtn" class="sec">✂️ YouTube se Clip banao</button>
+  <div class="st" id="ystatus"></div>
+  <div class="note">Ye feature abhi ban raha hai. Tab tak video apne device mein save karke upar se file chuno (sirf wahi video jiska aapko haq ya permission ho).</div>
 </div>
 
 <div class="card">
   <details>
-    <summary>🔍 Optional: AI se viral moments dhundhein (free Gemini key chahiye)</summary>
+    <summary>🔍 Optional: AI se viral moments dhoondho (free Gemini key)</summary>
     <label>Gemini API Key (sirf aapke browser mein rehti hai)</label>
     <input id="key" type="password" placeholder="AIzaSy...">
-    <label>Transcript / captions paste karein (timestamps ke saath)</label>
-    <textarea id="tr" placeholder="00:12 Yaar aaj toh scene ho gaya...&#10;00:45 Bhaago bhai police aa gayi!"></textarea>
-    <label>Vibe</label>
-    <select id="vibe"><option>Podcast / Storytelling</option><option>Comedy / Funny</option><option>Gaming / Action</option><option>Motivation / Education</option></select>
-    <button id="find">Find Viral Moments with AI</button>
+    <label>Transcript / captions (timestamps ke saath, Hindi / Hinglish / English sab chalega)</label>
+    <textarea id="tr" rows="5" placeholder="00:12 Yaar aaj toh scene ho gaya...&#10;00:45 Bhaago bhai police aa gayi!"></textarea>
+    <button id="find" class="lockable">Find Viral Moments</button>
     <div class="st" id="status"></div>
   </details>
 </div>
+
 <canvas id="c" width="720" height="1280"></canvas>
 
 <script>
+(function(){
 const $=id=>document.getElementById(id);
 const v=$("v"),c=$("c"),ctx=c.getContext("2d");
-let segs=[];
-try{$("key").value=localStorage.getItem("gk")||""}catch(_){}
-
-$("file").onchange=e=>{const f=e.target.files[0];if(f){v.src=URL.createObjectURL(f);$("moments").innerHTML="";segs=[];$("all").disabled=true}};
+const BIG=250*1024*1024;
+let ff=null,loaded=null,busy=false,wasmBad=false,segs=[];
 
 const sec=t=>typeof t==="number"?t:String(t).trim().split(":").map(Number).reduce((a,b)=>a*60+b,0);
+const setBar=p=>{$("bar").style.width=Math.max(0,Math.min(100,p))+"%"};
+const setRange=(s,e)=>{$("s").value=s;$("e").value=e};
+
+function lock(b){
+  busy=b;
+  document.querySelectorAll(".lockable").forEach(x=>x.disabled=b);
+  $("all").disabled=b||!segs.length;
+}
+
+function clearMoments(){$("moments").innerHTML="";segs=[];$("all").disabled=true}
 
 function addMoment(m){
-  const s=sec(m.start),e=sec(m.end);
-  segs.push({s,e});
+  const s=sec(m.start),e=sec(m.end);segs.push({s,e});
   const d=document.createElement("div");d.className="m";
-  d.innerHTML='<b></b><small></small><small>'+s.toFixed(0)+'s → '+e.toFixed(0)+'s</small><div class="btns"><button class="sec">▶ Preview</button><button>✂️ Cut</button></div>';
+  d.innerHTML='<b></b><small></small><small>'+s.toFixed(0)+'s → '+e.toFixed(0)+'s</small><div class="two"><button class="sec">▶ Preview</button><button>✂️ Cut</button></div>';
   d.querySelector("b").textContent=m.title||"Clip";
   d.querySelectorAll("small")[0].textContent=m.reason||"";
   const [b1,b2]=d.querySelectorAll("button");
-  b1.onclick=()=>{$("s").value=s;$("e").value=e;v.currentTime=s;v.play()};
-  b2.onclick=()=>{$("s").value=s;$("e").value=e;cutClip()};
-  $("moments").appendChild(d);
-  $("all").disabled=false;
+  b1.onclick=()=>{setRange(s,e);v.currentTime=s;v.play()};
+  b2.onclick=()=>{setRange(s,e);runCut()};
+  $("moments").appendChild(d);$("all").disabled=false;
 }
 
+$("file").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  v.src=URL.createObjectURL(f);loaded=null;clearMoments();
+  $("cstatus").textContent="";setBar(0);
+};
+
 $("auto").onclick=()=>{
-  if(!v.src||!isFinite(v.duration)){$("cstatus").textContent="Pehle video select karein.";return}
-  $("moments").innerHTML="";segs=[];
+  if(!v.src||!isFinite(v.duration)){$("cstatus").textContent="Pehle video chuno.";return}
+  clearMoments();
   const L=+$("len").value;let n=1;
   for(let t=0;t<v.duration;t+=L,n++){
     const end=Math.min(t+L,v.duration);
     if(end-t<5)break;
-    addMoment({start:t,end,title:"Clip "+n,reason:""});
+    addMoment({start:t,end,title:"Clip "+n});
   }
 };
 
 $("all").onclick=async()=>{
-  $("all").disabled=true;
-  for(const g of segs){$("s").value=g.s;$("e").value=g.e;await cutClip()}
-  $("all").disabled=false;
+  const list=segs.slice();
+  for(let i=0;i<list.length;i++){
+    setRange(list[i].s,list[i].e);
+    await runCut(" ("+(i+1)+"/"+list.length+")");
+  }
 };
 
-$("find").onclick=async()=>{
-  const key=$("key").value.trim(),tr=$("tr").value.trim();
-  if(!key||!tr){$("status").textContent="API key aur transcript dono daalein.";return}
-  try{localStorage.setItem("gk",key)}catch(_){}
-  $("status").textContent="AI moments dhoondh raha hai...";$("find").disabled=true;
-  const prompt='You are a viral short-video editor. From this transcript (with timestamps), pick the 5 best moments for Shorts/Reels. Vibe: '+$("vibe").value+'. Each clip must be about '+$("len").value+' seconds long. Return ONLY a JSON array: [{"start":seconds,"end":seconds,"title":"short catchy title","reason":"why it can go viral"}]. Use numbers in seconds.\nTranscript:\n'+tr;
+function showResult(blob,ext){
+  const url=URL.createObjectURL(blob),name="heiwa_clip_"+Date.now()+"."+ext;
+  const r=document.createElement("div");r.className="res";
+  r.innerHTML='<video controls playsinline src="'+url+'"></video><div><a href="'+url+'" download="'+name+'">⬇ Download</a><button class="sec">📤 Share (WhatsApp / Instagram)</button></div>';
+  r.querySelector("button").onclick=async()=>{
+    try{
+      const f=new File([blob],name,{type:blob.type});
+      if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f]});
+      else alert("Is browser mein Share nahi hai. Download dabayein.");
+    }catch(_){}
+  };
+  $("out").prepend(r);
+}
+
+async function cutWasm(s,e,file){
+  if(!window.FFmpeg||!crossOriginIsolated)throw new Error("wasm unavailable");
+  if(!ff){
+    $("cstatus").textContent="Fast engine load ho raha hai (pehli baar 20-40 sec)...";
+    ff=FFmpeg.createFFmpeg({log:false,corePath:"https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js"});
+    await Promise.race([ff.load(),new Promise((_,rej)=>setTimeout(()=>rej(new Error("load timeout")),90000))]);
+  }
+  if(loaded!==file){
+    $("cstatus").textContent="Video taiyaar ho rahi hai...";
+    try{ff.FS("unlink","in")}catch(_){}
+    ff.FS("writeFile","in",await FFmpeg.fetchFile(file));loaded=file;
+  }
+  ff.setProgress(({ratio})=>{const p=Math.round(Math.max(0,Math.min(1,ratio))*100);setBar(p);$("cstatus").textContent="Clip ban rahi hai... "+p+"%"});
+  const crop="scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280";
+  const fit="split[a][b];[a]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,boxblur=20:5[bg];[b]scale=720:1280:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2[o]";
+  const vf=$("mode").value==="fit"?["-filter_complex",fit,"-map","[o]","-map","0:a?"]:["-vf",crop];
+  await ff.run("-ss",String(s),"-i","in","-t",String(e-s),...vf,"-c:v","libx264","-preset","ultrafast","-crf","28","-pix_fmt","yuv420p","-c:a","aac","-b:a","128k","-movflags","+faststart","out.mp4");
+  const d=ff.FS("readFile","out.mp4");
+  try{ff.FS("unlink","out.mp4")}catch(_){}
+  showResult(new Blob([d],{type:"video/mp4"}),"mp4");
+}
+
+async function cutCanvas(s,e){
+  v.pause();
+  if(Math.abs(v.currentTime-s)>0.05){
+    v.currentTime=s;
+    await new Promise(r=>{v.addEventListener("seeked",r,{once:true});setTimeout(r,4000)});
+  }
+  const stream=c.captureStream(30),vs=v.captureStream?v.captureStream():null;
+  if(vs)vs.getAudioTracks().forEach(t=>stream.addTrack(t));
+  const mime=["video/mp4;codecs=avc1","video/webm;codecs=vp9,opus","video/webm"].find(m=>MediaRecorder.isTypeSupported(m))||"";
+  const rec=new MediaRecorder(stream,mime?{mimeType:mime}:{}),ch=[];
+  rec.ondataavailable=x=>x.data.size&&ch.push(x.data);
+  const done=new Promise(r=>rec.onstop=r);
+  const fit=$("mode").value==="fit";
+  rec.start();await v.play();
+  const draw=()=>{
+    const vw=v.videoWidth,vh=v.videoHeight;
+    ctx.fillStyle="#000";ctx.fillRect(0,0,c.width,c.height);
+    const cover=()=>{const tw=vh*9/16;if(tw<=vw)ctx.drawImage(v,(vw-tw)/2,0,tw,vh,0,0,c.width,c.height);else{const th=vw*16/9;ctx.drawImage(v,0,(vh-th)/2,vw,th,0,0,c.width,c.height)}};
+    if(fit){
+      ctx.filter="blur(25px)";cover();ctx.filter="none";
+      const h=c.width*vh/vw;ctx.drawImage(v,0,(c.height-h)/2,c.width,h);
+    }else cover();
+    if(v.currentTime>=e||v.ended){rec.stop();v.pause();return}
+    const p=Math.round((v.currentTime-s)/(e-s)*100);setBar(p);
+    $("cstatus").textContent="Clip ban rahi hai (real-time mode, tab na badlein)... "+p+"%";
+    requestAnimationFrame(draw);
+  };
+  draw();await done;
+  const t=rec.mimeType||"video/webm";
+  showResult(new Blob(ch,{type:t}),t.includes("mp4")?"mp4":"webm");
+}
+
+async function runCut(tag=""){
+  if(busy)return;
+  const file=$("file").files[0];
+  if(!file){$("cstatus").textContent="Pehle video chuno.";return}
+  let s=parseFloat($("s").value),e=parseFloat($("e").value);
+  if(isFinite(v.duration)&&e>v.duration)e=v.duration;
+  if(!(e>s)){$("cstatus").textContent="End time start se bada hona chahiye.";return}
+  lock(true);setBar(0);
   try{
-    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json"}})});
+    if(wasmBad)throw new Error("skip");
+    if(file.size>BIG)throw new Error("big");
+    await cutWasm(s,e,file);
+    $("cstatus").textContent="Clip ready!"+tag;setBar(100);
+  }catch(err){
+    const m=String(err.message);
+    if(m!=="skip"&&m!=="big"){console.warn(err);wasmBad=true}
+    if(m==="big")$("cstatus").textContent="Badi file ("+Math.round(file.size/1048576)+" MB): real-time mode, "+Math.round(e-s)+" sec lagenge. Tab na badlein.";
+    try{
+      await cutCanvas(s,e);
+      $("cstatus").textContent="Clip ready!"+tag;setBar(100);
+    }catch(e2){$("cstatus").textContent="Error: "+e2.message}
+  }
+  lock(false);
+}
+$("cut").onclick=()=>runCut();
+
+/* ---- YouTube (abhi dikhawati) ---- */
+$("ytbtn").onclick=()=>{
+  $("ystatus").textContent="Ye feature jaldi aa raha hai. Abhi video save karke upar se file chuno.";
+};
+
+/* ---- AI viral moments ---- */
+try{$("key").value=localStorage.getItem("gk")||""}catch(_){}
+$("find").onclick=async()=>{
+  const k=$("key").value.trim(),t=$("tr").value.trim(),st=$("status");
+  if(!k||!t){st.textContent="API key aur transcript dono daalein.";return}
+  try{localStorage.setItem("gk",k)}catch(_){}
+  st.textContent="AI moments dhoondh raha hai...";$("find").disabled=true;
+  const p='You are a viral short-video editor. From this timestamped transcript pick the 5 best moments for Shorts/Reels, each about '+$("len").value+' seconds. Write the title and reason in Hinglish (Hindi written in English letters, like "Yeh scene ekdum fire hai"). Return ONLY a JSON array: [{"start":seconds,"end":seconds,"title":"short catchy title","reason":"why it can go viral"}].\n'+t;
+  try{
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(k),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:p}]}],generationConfig:{responseMimeType:"application/json"}})});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error?.message||"API error");
-    const list=JSON.parse(d.candidates[0].content.parts.map(p=>p.text||"").join("").replace(/```json|```/g,"").trim());
-    $("moments").innerHTML="";segs=[];
-    list.forEach(addMoment);
-    $("status").textContent=list.length+" moments mile (upar list mein).";
-  }catch(err){$("status").textContent="Error: "+err.message}
+    const list=JSON.parse(d.candidates[0].content.parts.map(x=>x.text||"").join("").replace(/```json|```/g,"").trim());
+    clearMoments();list.forEach(addMoment);
+    st.textContent=list.length+" moments mile (upar list mein).";
+  }catch(err){st.textContent="Error: "+err.message}
   $("find").disabled=false;
 };
-
-$("cut").onclick=cutClip;
-
-async function cutClip(){
-  if(!v.src){$("cstatus").textContent="Pehle video select karein.";return}
-  const s=parseFloat($("s").value),e=parseFloat($("e").value);
-  if(!(e>s)){$("cstatus").textContent="End time start se bada hona chahiye.";return}
-  $("cut").disabled=true;
-  $("cstatus").textContent="Clip ban rahi hai (real-time record hoti hai, tab change na karein)...";
-  try{
-    v.pause();v.currentTime=s;
-    await new Promise(r=>v.addEventListener("seeked",r,{once:true}));
-    const stream=c.captureStream(30);
-    const vs=v.captureStream?v.captureStream():null;
-    if(vs)vs.getAudioTracks().forEach(t=>stream.addTrack(t));
-    const mime=["video/mp4;codecs=avc1","video/webm;codecs=vp9,opus","video/webm"].find(m=>MediaRecorder.isTypeSupported(m))||"";
-    const rec=new MediaRecorder(stream,mime?{mimeType:mime}:{});
-    const chunks=[];rec.ondataavailable=ev=>ev.data.size&&chunks.push(ev.data);
-    const done=new Promise(r=>rec.onstop=r);
-    rec.start();await v.play();
-    const draw=()=>{
-      const vw=v.videoWidth,vh=v.videoHeight,tw=vh*9/16;
-      ctx.fillStyle="#000";ctx.fillRect(0,0,c.width,c.height);
-      if(tw<=vw)ctx.drawImage(v,(vw-tw)/2,0,tw,vh,0,0,c.width,c.height);
-      else{const th=vw*16/9;ctx.drawImage(v,0,(vh-th)/2,vw,th,0,0,c.width,c.height)}
-      if(v.currentTime>=e||v.ended){rec.stop();v.pause();return}
-      $("cstatus").textContent="Recording... "+Math.round((v.currentTime-s)/(e-s)*100)+"%";
-      requestAnimationFrame(draw);
-    };
-    draw();await done;
-    const type=rec.mimeType||"video/webm";
-    const url=URL.createObjectURL(new Blob(chunks,{type}));
-    const ext=type.includes("mp4")?"mp4":"webm";
-    const box=document.createElement("div");
-    box.innerHTML='<video controls playsinline src="'+url+'"></video><a href="'+url+'" download="clip_'+Date.now()+'.'+ext+'">⬇ Download clip (.'+ext+')</a>';
-    $("out").prepend(box);
-    $("cstatus").textContent="Clip ready!";
-  }catch(err){$("cstatus").textContent="Error: "+err.message}
-  $("cut").disabled=false;
-}
+})();
 </script>
 </body>
 </html>
-          
