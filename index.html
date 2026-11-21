@@ -546,4 +546,57 @@ applySrc();
 })();
 </script>
 </body>
-</html>
+</html><script>
+/* ===== ADD-ON: timestamps se seedha clips + file ko memory mein copy ===== */
+(function(){
+const $=id=>document.getElementById(id);
+const say=t=>{$("cstatus").textContent=t},isay=t=>{$("istatus").textContent=t};
+const hasTs=()=>/\d{1,3}(?::\d{1,2}){1,2}/.test($("ts").value);
+let lastTs="",copying=false;
+
+/* naya button: timestamps se seedha clips banao */
+const b=document.createElement("button");
+b.id="tsrun";b.textContent="⚡ Timestamps se seedha clips banao";
+$("tsgo").insertAdjacentElement("afterend",b);
+b.onclick=()=>{
+  if(!hasTs()){say("Pehle upar timestamps paste karein (jaise 00:12:30 Naam).");return}
+  $("tsgo").click();
+  if(/^0 clips/.test($("cstatus").textContent))return;
+  $("gen").click();
+};
+
+/* timestamps paste hon to "Clips banao" aur "Abhi yehi clip banao" unhi ko use karein */
+document.addEventListener("click",ev=>{
+  const t=ev.target.closest&&ev.target.closest("button");if(!t)return;
+  if(t.id==="tsgo")lastTs=$("ts").value;
+  else if(t.id==="gen"&&hasTs()&&$("ts").value!==lastTs){
+    $("tsgo").click();
+    if(/^0 clips/.test($("cstatus").textContent)){ev.stopImmediatePropagation();ev.preventDefault()}
+  }
+  else if(t.id==="cut"&&hasTs()&&$("s").value.trim()==="0"&&$("e").value.trim()==="30"){
+    ev.stopImmediatePropagation();ev.preventDefault();b.click();
+  }
+},true);
+
+/* file chunte hi memory mein copy (phone ki file permission/cloud wali dikkat se bachne ke liye) */
+document.addEventListener("change",async ev=>{
+  const inp=ev.target;if(!inp||inp.id!=="file"||copying)return;
+  const f=inp.files&&inp.files[0];if(!f)return;
+  ev.stopImmediatePropagation();
+  const coarse=matchMedia("(pointer:coarse)").matches;
+  if(f.size<=(coarse?250:600)*1048576){
+    isay("File memory mein copy ho rahi hai ("+(f.size/1048576).toFixed(1)+" MB)...");
+    try{
+      const buf=await f.arrayBuffer();
+      const dt=new DataTransfer();dt.items.add(new File([buf],f.name,{type:f.type,lastModified:f.lastModified}));
+      inp.files=dt.files;
+    }catch(err){
+      inp.value="";
+      isay("❌ Ye file browser padh nahi pa raha ("+(err&&err.name||"error")+").\nKaaran: file Google Photos/cloud ya kisi app ke andar ho, ya permission nahi mili.\nFix: file ko phone ki Downloads ya Gallery mein save karke wahin se chuno.");
+      return;
+    }
+  }
+  copying=true;try{inp.dispatchEvent(new Event("change",{bubbles:true}))}finally{copying=false}
+},true);
+})();
+</script>
