@@ -52,6 +52,8 @@ button.red{background:#6a2433;color:#fff}
 <h1>⚡ Heiwa Clips Cut</h1>
 <p class="sub">Free 9:16 vertical clipper. Phone aur PC dono par chalta hai. Video aapke device par hi katti hai, kahin upload nahi hoti.</p>
 
+<div class="note" id="eng">Fast engine check ho raha hai...</div>
+
 <div class="card">
   <label>1. Video file chuno (MP4 / MOV / WebM)</label>
   <input id="file" type="file" accept="video/*">
@@ -226,6 +228,9 @@ $("file").onchange=ev=>{
   v.src=URL.createObjectURL(f);videoFile=f;loaded=null;src="file";
   try{const sg=f.name+"|"+f.size,o=localStorage.getItem("hsig");if(o&&o!==sg)clearMoments();localStorage.setItem("hsig",sg)}catch(_){}
   $("cstatus").textContent="";setBar(0);
+  const ty=f.type||"",ext=(f.name.split(".").pop()||"").toLowerCase();
+  if((ty&&!v.canPlayType(ty))||/^(mkv|avi|wmv|flv|ts|mpg|mpeg)$/.test(ext))
+    $("cstatus").textContent="⚠ "+f.name+" ("+mb(f.size)+(ty?", "+ty:"")+"): is browser ka player shayad ise na chala sake. Tez engine chalu ho to kat jayegi, warna H.264 MP4 mein badlein.";
 };
 
 $("auto").onclick=()=>{
@@ -365,7 +370,8 @@ async function cutWasm(s,e,file,P){
   showResult(new Blob([d],{type:"video/mp4"}),"mp4");
 }
 
-const BADFMT="Ye video is browser mein chal nahi sakti (shayad H.265/HEVC). WhatsApp se khud ko bhejkar ya H.264 MP4 banakar dobara chuno.";
+const BADFMT="Ye video is browser ke player mein nahi chal rahi (shayad H.265/HEVC, MKV ya AV1). Tez engine chalu hone par ye kat sakti hai; warna H.264 MP4 chahiye.";
+const fi=f=>f?" ["+f.name+", "+mb(f.size)+(f.type?", "+f.type:"")+"]":"";
 async function ensureVideo(file){
   if(videoFile===file&&v.getAttribute("src"))return;
   v.src=URL.createObjectURL(file);videoFile=file;
@@ -373,7 +379,7 @@ async function ensureVideo(file){
     if(v.readyState>=1){res();return}
     let to=0;
     const cl=()=>{v.removeEventListener("loadedmetadata",ok);v.removeEventListener("error",bad);clearTimeout(to)};
-    const ok=()=>{cl();res()},bad=()=>{cl();rej(new Error(BADFMT))};
+    const ok=()=>{cl();res()},bad=()=>{cl();rej(new Error(BADFMT+fi(file)))};
     to=setTimeout(bad,15000);
     v.addEventListener("loadedmetadata",ok);v.addEventListener("error",bad);
   });
@@ -398,7 +404,7 @@ async function cutCanvas(s,e,P){
   const done=new Promise(r=>rec.onstop=r);
   const fit=$("mode").value==="fit";
   let stalled=false,last=-1,stall=Date.now();
-  try{await v.play()}catch(err){throw new Error(err&&err.name==="NotSupportedError"?BADFMT:((err&&err.message)||"Video play nahi hui"))}
+  try{await v.play()}catch(err){throw new Error(err&&err.name==="NotSupportedError"?BADFMT+fi($("file").files[0]):((err&&err.message)||"Video play nahi hui"))}
   rec.start();
   const draw=()=>{
     const vw=v.videoWidth,vh=v.videoHeight;
@@ -539,6 +545,14 @@ $("ytbtn").onclick=async()=>{
 };
 
 window.addEventListener("beforeunload",ev=>{if(busy){ev.preventDefault();ev.returnValue=""}});
+(async()=>{
+  let h="";
+  try{
+    const r=await fetch(location.href,{cache:"no-store"});
+    h=" · COOP: "+(r.headers.get("cross-origin-opener-policy")||"nahi mila")+" · COEP: "+(r.headers.get("cross-origin-embedder-policy")||"nahi mila");
+  }catch(_){}
+  $("eng").textContent=(window.crossOriginIsolated?"⚡ Fast engine: ON (har tarah ki video kat sakti hai, file ~250 MB tak)":"⚠ Fast engine: OFF (site ke headers nahi lage). Abhi sirf browser-playable H.264 video chalegi")+h;
+})();
 if($("file").files[0])$("file").dispatchEvent(new Event("change"));
 try{JSON.parse(localStorage.getItem("hs")||"[]").slice(0,MAX).forEach(x=>addMoment({start:x.s,end:x.e,title:x.t}))}catch(_){}
 (async()=>{await prune();const all=(await hist("all"))||[];all.sort((a,b)=>a.id-b.id).forEach(x=>showResult(x.blob,x.ext,x))})();
