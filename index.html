@@ -138,7 +138,7 @@ const BIG=250*1024*1024,MAX=15;
 const isMobile=(window.matchMedia&&matchMedia("(pointer:coarse)").matches)||/Android|iPhone|iPad/i.test(navigator.userAgent);
 const mem=navigator.deviceMemory||4;
 const DAY=864e5,KEEP=10;
-let ff=null,loaded=null,inp="in",busy=false,batching=false,wasmBad=false,segs=[],wl=null,yt=null,ytApi=null,src="file",audioLost=false,curName="",skipNow=false,stopQ=false;
+let ff=null,loaded=null,inp="in",busy=false,batching=false,wasmBad=false,segs=[],wl=null,yt=null,ytApi=null,src="file",audioLost=false,curName="",skipNow=false,stopQ=false,videoFile=null,wasmWhy="";
 
 const sec=t=>typeof t==="number"?t:String(t).trim().split(":").map(Number).reduce((a,b)=>a*60+b,0);
 const fmt=t=>{t=Math.round(t);const h=Math.floor(t/3600),mi=Math.floor(t%3600/60),s=t%60;return(h?h+":":"")+String(mi).padStart(2,"0")+":"+String(s).padStart(2,"0")};
@@ -223,7 +223,7 @@ function buf(s,e){
 
 $("file").onchange=ev=>{
   const f=ev.target.files[0];if(!f)return;
-  v.src=URL.createObjectURL(f);loaded=null;src="file";
+  v.src=URL.createObjectURL(f);videoFile=f;loaded=null;src="file";
   try{const sg=f.name+"|"+f.size,o=localStorage.getItem("hsig");if(o&&o!==sg)clearMoments();localStorage.setItem("hsig",sg)}catch(_){}
   $("cstatus").textContent="";setBar(0);
 };
@@ -365,7 +365,21 @@ async function cutWasm(s,e,file,P){
   showResult(new Blob([d],{type:"video/mp4"}),"mp4");
 }
 
+const BADFMT="Ye video is browser mein chal nahi sakti (shayad H.265/HEVC). WhatsApp se khud ko bhejkar ya H.264 MP4 banakar dobara chuno.";
+async function ensureVideo(file){
+  if(videoFile===file&&v.getAttribute("src"))return;
+  v.src=URL.createObjectURL(file);videoFile=file;
+  await new Promise((res,rej)=>{
+    if(v.readyState>=1){res();return}
+    let to=0;
+    const cl=()=>{v.removeEventListener("loadedmetadata",ok);v.removeEventListener("error",bad);clearTimeout(to)};
+    const ok=()=>{cl();res()},bad=()=>{cl();rej(new Error(BADFMT))};
+    to=setTimeout(bad,15000);
+    v.addEventListener("loadedmetadata",ok);v.addEventListener("error",bad);
+  });
+}
 async function cutCanvas(s,e,P){
+  await ensureVideo($("file").files[0]);
   /* canvas mode 1080p se upar nahi jaata */
   audioLost=false;
   const k=Math.min(1,1080/P.w);
@@ -384,7 +398,8 @@ async function cutCanvas(s,e,P){
   const done=new Promise(r=>rec.onstop=r);
   const fit=$("mode").value==="fit";
   let stalled=false,last=-1,stall=Date.now();
-  await v.play();rec.start();
+  try{await v.play()}catch(err){throw new Error(err&&err.name==="NotSupportedError"?BADFMT:((err&&err.message)||"Video play nahi hui"))}
+  rec.start();
   const draw=()=>{
     const vw=v.videoWidth,vh=v.videoHeight;
     ctx.fillStyle="#000";ctx.fillRect(0,0,c.width,c.height);
@@ -428,14 +443,14 @@ async function runCut(tag="",seg){
     ok=true;
   }catch(err){
     const m=String(err.message);
-    if(m!=="skip"&&m!=="big"){console.warn(err);wasmBad=true}
+    if(m!=="skip"&&m!=="big"){console.warn(err);wasmBad=true;wasmWhy=m}
     if(m==="big")$("cstatus").textContent="Badi file ("+Math.round(file.size/1048576)+" MB): real-time mode, "+Math.round(e-s)+" sec lagenge. Tab na badlein.";
     try{
       await cutCanvas(s,e,P);
       ok=true;
-    }catch(e2){if(e2.message==="Skipped"){sk=true;$("cstatus").textContent="Skip kar diya."}else $("cstatus").textContent="Error: "+e2.message+(m!=="skip"&&m!=="big"?" | Fast engine fail: "+m:"")}
+    }catch(e2){if(e2.message==="Skipped"){sk=true;$("cstatus").textContent="Skip kar diya."}else $("cstatus").textContent="Error: "+e2.message+(wasmWhy&&m!=="big"?" | Fast engine band: "+wasmWhy:"")}
   }
-  if(ok){$("cstatus").textContent="Clip ready!"+tag+" Download neeche Taiyaar clips card mein."+(audioLost?" (real-time mode mein awaaz nahi aa saki)":"");setBar(100)}
+  if(ok){$("cstatus").textContent="Clip ready!"+tag+" Download neeche Taiyaar clips card mein."+(audioLost?" (real-time mode mein awaaz nahi aa saki)":"")+(wasmBad&&wasmWhy?" [Fast engine band: "+wasmWhy+"]":"");setBar(100)}
   if(seg){seg.state=ok?"Done":sk?"Skipped":"Error";seg.tag.textContent=ok?"✅ Done":sk?"⏭ Skipped":"❌ Error"}
   lock(false);
   return ok;
@@ -524,6 +539,7 @@ $("ytbtn").onclick=async()=>{
 };
 
 window.addEventListener("beforeunload",ev=>{if(busy){ev.preventDefault();ev.returnValue=""}});
+if($("file").files[0])$("file").dispatchEvent(new Event("change"));
 try{JSON.parse(localStorage.getItem("hs")||"[]").slice(0,MAX).forEach(x=>addMoment({start:x.s,end:x.e,title:x.t}))}catch(_){}
 (async()=>{await prune();const all=(await hist("all"))||[];all.sort((a,b)=>a.id-b.id).forEach(x=>showResult(x.blob,x.ext,x))})();
 })();
